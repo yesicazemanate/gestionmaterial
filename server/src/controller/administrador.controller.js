@@ -1,12 +1,18 @@
-import { createAdministradorQuery,obtenerAdministradorQuery,obtenerAdministradorQueryId, deleteAdministradorQuery } from "../query/administrador.query.js";
- export const createAdministrador=async(req,res)=>{
-    const { Nombre, NumeroCedula, Correo,Cargo, Telefono } = req.body;
+
+import { createAdministradorQuery,obtenerAdministradorQuery,obtenerAdministradorQueryId, deleteAdministradorQuery, loginAdministradorQuery } from "../query/administrador.query.js";
+import { encrypt, verified } from '../utils/bcrypt.js';
+import { generateToken } from '../utils/jwt.js';
+ 
+export const createAdministrador=async(req,res)=>{
+    const { Nombre, NumeroCedula, Correo,Cargo, Telefono, Contraseña } = req.body;
+    const hashedPassword = await encrypt(Contraseña)
     const administradorData = {
         Nombre:Nombre,
         NumeroCedula:NumeroCedula,
         Correo:Correo,
         Cargo:Cargo,
-        Telefono:Telefono
+        Telefono:Telefono,
+        Contraseña:hashedPassword
     }
  try {
         const administradorId = await createAdministradorQuery("administrador",administradorData);
@@ -18,7 +24,35 @@ import { createAdministradorQuery,obtenerAdministradorQuery,obtenerAdministrador
     } catch (err) {
         res.status(500).json({ error: 'Error al crear el administrador' });
     }
+
 }
+export const loginAdministrador=async(req,res)=>{
+    const {Correo, Contraseña } = req.body;
+ try {
+        const administrador = await loginAdministradorQuery("administrador",Correo)
+        if(!administrador){
+            return res.send({message:'Usuario o contraseña incorrectos'})
+        }
+        const contraseñaValida = await verified(Contraseña, administrador.Contraseña);
+        if (!contraseñaValida) {
+            return res.send({message:'Usuario o contraseña incorrectos'})
+        }
+    
+          const token = generateToken(Correo);
+          console.log(token)
+          res.json({
+            message: 'Inicio de sesión exitoso',
+            Token:token,
+            administrador,
+            typoUser:"administrador"
+
+        })
+    
+    
+    } catch (err) {
+        console.error('Error en miControlador:', err);
+        res.status(500).json({ error: 'Error al iniciar sesión' },err);
+    }}
 export const obtenerAdministrador=async(req,res)=>{
  try {
         const administradores = await obtenerAdministradorQuery("administrador");

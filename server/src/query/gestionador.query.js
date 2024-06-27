@@ -9,6 +9,15 @@ export const createGestionadorQuery =async(tableName, data)=>{
         throw err
     }
 }
+export const loginGestionadorQuery =async(tableName, Correo)=>{
+    const query =`SELECT * FROM ${tableName} WHERE Correo = ?`
+    try{
+        const [gestionador] = await db.query(query, [Correo])
+        return gestionador[0]
+    }catch(err){
+        throw err
+    }
+}
 export const obtenerGestionadorQuery =async(tableName)=>{
     const query =`SELECT * FROM ${tableName}`
     try{

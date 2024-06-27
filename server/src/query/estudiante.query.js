@@ -9,6 +9,15 @@ export const createEstudianteQuery =async(tableName, data)=>{
         throw err
     }
 }
+export const loginEstudianteQuery =async(tableName, Correo)=>{
+    const query =`SELECT * FROM ${tableName} WHERE Correo = ?`
+    try{
+        const [estudiante] = await db.query(query, [Correo])
+        return estudiante[0]
+    }catch(err){
+        throw err
+    }
+}
 export const obtenerEstudianteQuery =async(tableName)=>{
     const query =`SELECT * FROM ${tableName}`
     try{

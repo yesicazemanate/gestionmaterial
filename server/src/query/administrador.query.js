@@ -9,6 +9,15 @@ export const createAdministradorQuery =async(tableName, data)=>{
         throw err
     }
 }
+export const loginAdministradorQuery =async(tableName, Correo)=>{
+    const query =`SELECT * FROM ${tableName} WHERE Correo = ?`
+    try{
+        const [administrador] = await db.query(query, [Correo])
+        return administrador[0]
+    }catch(err){
+        throw err
+    }
+}
 export const obtenerAdministradorQuery =async(tableName)=>{
     const query =`SELECT * FROM ${tableName}`
     try{

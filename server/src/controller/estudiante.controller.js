@@ -1,6 +1,9 @@
-import{createEstudianteQuery, obtenerEstudianteQuery, obtenerEstudianteQueryId,deleteEstudianteQuery} from '../query/estudiante.query.js'
- export const createEstudiante=async(req,res)=>{
+import { encrypt, verified } from '../utils/bcrypt.js';
+import { generateToken } from '../utils/jwt.js';
+import{createEstudianteQuery, obtenerEstudianteQuery, obtenerEstudianteQueryId,deleteEstudianteQuery, loginEstudianteQuery} from '../query/estudiante.query.js'
+ export const createEstudiante=async (req,res)=>{
     const { Nombre, DocumentoIdentidad, NumeroDocumento, Institucion, Correo, Telefono,Contraseña } = req.body;
+    const hashedPassword = await encrypt(Contraseña);
     const estudianteData = {
         Nombre:Nombre,
         DocumentoIdentidad:DocumentoIdentidad,
@@ -8,7 +11,7 @@ import{createEstudianteQuery, obtenerEstudianteQuery, obtenerEstudianteQueryId,d
         Institucion:Institucion,
         Correo:Correo,
         Telefono:Telefono,
-        Contraseña:Contraseña
+        Contraseña:hashedPassword
     }
  try {
         const estudianteId = await createEstudianteQuery("estudiante",estudianteData);
@@ -21,6 +24,33 @@ import{createEstudianteQuery, obtenerEstudianteQuery, obtenerEstudianteQueryId,d
         res.status(500).json({ error: 'Error al crear el estudiante' });
     }
 }
+export const loginEstudiante=async(req,res)=>{
+    const {Correo, Contraseña } = req.body;
+ try {
+        const estudiante = await loginEstudianteQuery("estudiante",Correo)
+        if(!estudiante){
+            return res.send({message:'Usuario o contraseña incorrectos'})
+        }
+        const contraseñaValida = await verified(Contraseña, estudiante.Contraseña);
+        if (!contraseñaValida) {
+            return res.send({message:'Usuario o contraseña incorrectos'})
+        }
+    
+          const token = generateToken(Correo);
+          console.log(token)
+          res.json({
+            message: 'Inicio de sesión exitoso',
+            Token:token,
+            estudiante,
+            typoUser:"estudiante"
+
+        })
+    
+    
+    } catch (err) {
+        console.error('Error en miControlador:', err);
+        res.status(500).json({ error: 'Error al iniciar sesión' },err);
+    }}
 export const obtenerEstudiante=async(req,res)=>{
  try {
         const estudiantes = await obtenerEstudianteQuery("estudiante");
